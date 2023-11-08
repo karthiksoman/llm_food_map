@@ -22,6 +22,14 @@ openai.api_key = api_key
 openai.api_base = resource_endpoint
 openai.api_version = api_version
 
+
+def load_sentence_transformer(sentence_embedding_model):
+    return SentenceTransformerEmbeddings(model_name=sentence_embedding_model)
+
+def load_chroma(vector_db_path, sentence_embedding_model):
+    embedding_function = load_sentence_transformer(sentence_embedding_model)
+    return Chroma(persist_directory=vector_db_path, embedding_function=embedding_function)
+
 def get_GPT_response(instruction, system_prompt, chat_model_id, chat_deployment_id, temperature=0):
     try:
         response = openai.ChatCompletion.create(

@@ -27,6 +27,52 @@ openai.api_base = resource_endpoint
 openai.api_version = api_version
 
 
+def main():
+    vectorstore = load_chroma(VECTOR_DB_PATH, SENTENCE_EMBEDDING_MODEL_FOR_NODE_RETRIEVAL)
+    node_search_result = vectorstore.similarity_search_with_score(query, k=25)
+    food_candidates_names = []
+    food_candidates_id_dict = {}
+    score_match_dict = {}
+    for item in node_search_result:
+        if item[-1] < 1:
+            food_candidates_names.append(item[0].page_content)
+            food_candidates_id_dict[item[0].page_content] = item[0].metadata["foodON_ID"]
+            score_match_dict[item[0].page_content] = 1 - item[-1]
+        else:
+            break
+    if len(food_candidates_names) != 0:
+        food_candidates_names_str = ", ".join(food_candidates_names)
+
+        SYSTEM_PROMPT = """
+            You are expert in identifying Food entities. Find the best match for the name of the food given in the Query given below to the options given in the Context provided. Also, provide a confidence score, between 0 and 1, for the best match. Provide the output in JSON format as given below:
+            {{
+                "query" : <given name>
+                "best match" : <match found>
+                "confidence" : <confidence score>
+            }}
+        """
+        enriched_prompt = "Context: "+ food_candidates_names_str + "\n" + "Query: " + query
+        output = get_GPT_response(enriched_prompt, SYSTEM_PROMPT, CHAT_MODEL_ID, CHAT_DEPLOYMENT_ID, temperature=LLM_TEMPERATURE)
+        output_dict = json.loads(output)
+        best_match = output_dict["best match"]
+        try:
+            best_match_id = food_candidates_id_dict[best_match]
+            best_match_vector_similarity = score_match_dict[best_match]
+            best_match_llm_confidence = output_dict["confidence"]
+            best_match_final_confidence = np.mean([best_match_vector_similarity, best_match_llm_confidence])
+            output_2 = {
+                "query" : query,
+                "best_foodON_match" : best_match,
+                "best_foodON_match_id" : best_match_id,
+                "confidence_score" : best_match_final_confidence
+            }
+        except:
+            output_2 = no_match_resp(query)        
+    else:
+        output_2 = no_match_resp(query)
+    print(json.dumps(output_2, indent=4))
+
+
 def load_sentence_transformer(sentence_embedding_model):
     return SentenceTransformerEmbeddings(model_name=sentence_embedding_model)
 
@@ -66,52 +112,7 @@ def no_match_resp(input_query):
     return output
     
 
-vectorstore = load_chroma(VECTOR_DB_PATH, SENTENCE_EMBEDDING_MODEL_FOR_NODE_RETRIEVAL)
-node_search_result = vectorstore.similarity_search_with_score(query, k=25)
-food_candidates_names = []
-food_candidates_id_dict = {}
-score_match_dict = {}
-for item in node_search_result:
-    if item[-1] < 1:
-        food_candidates_names.append(item[0].page_content)
-        food_candidates_id_dict[item[0].page_content] = item[0].metadata["foodON_ID"]
-        score_match_dict[item[0].page_content] = 1 - item[-1]
-    else:
-        break
-
-if len(food_candidates_names) != 0:
-    food_candidates_names_str = ", ".join(food_candidates_names)
-
-    SYSTEM_PROMPT = """
-        You are expert in identifying Food entities. Find the best match for the name of the food given in the Query given below to the options given in the Context provided. Also, provide a confidence score, between 0 and 1, for the best match. Provide the output in JSON format as given below:
-        {{
-            "query" : <given name>
-            "best match" : <match found>
-            "confidence" : <confidence score>
-        }}
-    """
-
-    enriched_prompt = "Context: "+ food_candidates_names_str + "\n" + "Query: " + query
-    output = get_GPT_response(enriched_prompt, SYSTEM_PROMPT, CHAT_MODEL_ID, CHAT_DEPLOYMENT_ID, temperature=LLM_TEMPERATURE)
-
-
-    output_dict = json.loads(output)
-    best_match = output_dict["best match"]
-    try:
-        best_match_id = food_candidates_id_dict[best_match]
-        best_match_vector_similarity = score_match_dict[best_match]
-        best_match_llm_confidence = output_dict["confidence"]
-        best_match_final_confidence = np.mean([best_match_vector_similarity, best_match_llm_confidence])
-        output_2 = {
-            "query" : query,
-            "best_foodON_match" : best_match,
-            "best_foodON_match_id" : best_match_id,
-            "confidence_score" : best_match_final_confidence
-        }
-    except:
-        output_2 = no_match_resp(query)
-        
-else:
-    output_2 = no_match_resp(query)
-
-print(json.dumps(output_2, indent=4))
+    
+    
+if __name__ == "__main__":
+    main()

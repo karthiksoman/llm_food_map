@@ -54,6 +54,15 @@ def get_GPT_response(instruction, system_prompt, chat_model_id, chat_deployment_
             return 'Unexpected response'
     except:
         return None
+    
+def no_match_resp(input_query):
+    output = {
+        "query" : input_query,
+        "best_foodON_match" : '',
+        "best_foodON_match_id" : ''
+    }
+    return output
+    
 
 vectorstore = load_chroma(VECTOR_DB_PATH, SENTENCE_EMBEDDING_MODEL_FOR_NODE_RETRIEVAL)
 node_search_result = vectorstore.similarity_search_with_score(query, k=25)
@@ -85,18 +94,17 @@ if len(food_candidates_names) != 0:
 
     output_dict = json.loads(output)
     best_match = output_dict["best match"]
-    best_match_id = food_candidates_id_dict[best_match]
-
-    output_2 = {
-        "query" : query,
-        "best_foodON_match" : best_match,
-        "best_foodON_match_id" : best_match_id
-    }
+    try:
+        best_match_id = food_candidates_id_dict[best_match]
+        output_2 = {
+            "query" : query,
+            "best_foodON_match" : best_match,
+            "best_foodON_match_id" : best_match_id
+        }
+    except:
+        output_2 = no_match_resp(query)
+        
 else:
-    output_2 = {
-        "query" : query,
-        "best_foodON_match" : '',
-        "best_foodON_match_id" : ''
-    }
+    output_2 = no_match_resp(query)
 
 print(json.dumps(output_2, indent=4))

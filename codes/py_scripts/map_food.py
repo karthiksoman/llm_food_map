@@ -14,7 +14,7 @@ CHAT_MODEL_ID = "gpt-35-turbo"
 CHAT_DEPLOYMENT_ID = CHAT_MODEL_ID
 VECTOR_DB_PATH = "../../data/vectorDB/foodON"
 SENTENCE_EMBEDDING_MODEL_FOR_NODE_RETRIEVAL = "sentence-transformers/all-MiniLM-L6-v2"
-LLM_TEMPERATURE = 0.3
+LLM_TEMPERATURE = 0.7
 
 config_file = os.path.join(os.path.expanduser('~'), '.gpt_config.env')
 load_dotenv(config_file)

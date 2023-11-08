@@ -75,4 +75,6 @@ SYSTEM_PROMPT = """
 enriched_prompt = "Context: "+ food_candidates_names_str + "\n" + "Query: " + query
 output = get_GPT_response(enriched_prompt, SYSTEM_PROMPT, CHAT_MODEL_ID, CHAT_DEPLOYMENT_ID, temperature=LLM_TEMPERATURE)
 
-print(output)
+import json
+output_dict = json.loads(output)
+print(output_dict["best match"])

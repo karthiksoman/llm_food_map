@@ -1,6 +1,8 @@
 import sys
 import openai
 from dotenv import load_dotenv, find_dotenv
+from langchain.vectorstores import Chroma
+from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 import os
 
 

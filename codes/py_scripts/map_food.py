@@ -65,7 +65,11 @@ for item in node_search_result:
 food_candidates_names_str = ", ".join(food_candidates_names)
 
 SYSTEM_PROMPT = """
-    You are expert in identifying Food entities. Find the best match for the name of the food given in the Query given below to the options given in the Context provided
+    You are expert in identifying Food entities. Find the best match for the name of the food given in the Query given below to the options given in the Context provided. Provide the output in JSON format as given below:
+    {{
+        "query" : <given name>
+        "best match" : <match found>
+    }}
 """
 
 enriched_prompt = "Context: "+ food_candidates_names_str + "\n" + "Query: " + query

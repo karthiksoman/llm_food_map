@@ -14,7 +14,7 @@ CHAT_MODEL_ID = "gpt-35-turbo"
 CHAT_DEPLOYMENT_ID = CHAT_MODEL_ID
 VECTOR_DB_PATH = "../../data/vectorDB/foodON"
 SENTENCE_EMBEDDING_MODEL_FOR_NODE_RETRIEVAL = "sentence-transformers/all-MiniLM-L6-v2"
-LLM_TEMPERATURE = 0.7
+LLM_TEMPERATURE = 0
 
 config_file = os.path.join(os.path.expanduser('~'), '.gpt_config.env')
 load_dotenv(config_file)
@@ -44,7 +44,7 @@ def main():
         food_candidates_names_str = ", ".join(food_candidates_names)
 
         SYSTEM_PROMPT = """
-            You are expert in identifying Food entities. Find the best match for the name of the food given in the Query given below to the options given in the Context provided. Also, provide a confidence score, between 0 and 1, for the best match. Provide the output in JSON format as given below:
+            You are expert in identifying Food entities. Which options given in the context match best with the given food name in the Query. Also, provide a confidence score, between 0 and 1, for the best match. Provide the output in JSON format as given below:
             {{
                 "query" : <given name>
                 "best match" : <match found>

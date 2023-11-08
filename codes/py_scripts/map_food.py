@@ -3,6 +3,7 @@ import openai
 from dotenv import load_dotenv, find_dotenv
 from langchain.vectorstores import Chroma
 from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
+import json
 import os
 
 
@@ -58,32 +59,44 @@ vectorstore = load_chroma(VECTOR_DB_PATH, SENTENCE_EMBEDDING_MODEL_FOR_NODE_RETR
 node_search_result = vectorstore.similarity_search_with_score(query, k=25)
 food_candidates_names = []
 food_candidates_id_dict = {}
+score_match_dict = {}
 for item in node_search_result:
-    food_candidates_names.append(item[0].page_content)
-    food_candidates_id_dict[item[0].page_content] = item[0].metadata["foodON_ID"]
+    if item[-1] < 1:
+        food_candidates_names.append(item[0].page_content)
+        food_candidates_id_dict[item[0].page_content] = item[0].metadata["foodON_ID"]
+        score_match_dict[item[0].page_content] = item[-1]
+    else:
+        break
 
-food_candidates_names_str = ", ".join(food_candidates_names)
+if len(food_candidates_names) != 0:
+    food_candidates_names_str = ", ".join(food_candidates_names)
 
-SYSTEM_PROMPT = """
-    You are expert in identifying Food entities. Find the best match for the name of the food given in the Query given below to the options given in the Context provided. Provide the output in JSON format as given below:
-    {{
-        "query" : <given name>
-        "best match" : <match found>
-    }}
-"""
+    SYSTEM_PROMPT = """
+        You are expert in identifying Food entities. Find the best match for the name of the food given in the Query given below to the options given in the Context provided. Provide the output in JSON format as given below:
+        {{
+            "query" : <given name>
+            "best match" : <match found>
+        }}
+    """
 
-enriched_prompt = "Context: "+ food_candidates_names_str + "\n" + "Query: " + query
-output = get_GPT_response(enriched_prompt, SYSTEM_PROMPT, CHAT_MODEL_ID, CHAT_DEPLOYMENT_ID, temperature=LLM_TEMPERATURE)
+    enriched_prompt = "Context: "+ food_candidates_names_str + "\n" + "Query: " + query
+    output = get_GPT_response(enriched_prompt, SYSTEM_PROMPT, CHAT_MODEL_ID, CHAT_DEPLOYMENT_ID, temperature=LLM_TEMPERATURE)
 
-import json
-output_dict = json.loads(output)
-best_match = output_dict["best match"]
-best_match_id = food_candidates_id_dict[best_match]
 
-output_2 = {
-    "query" : query,
-    "best_foodON_match" : best_match,
-    "best_foodON_match_id" : best_match_id
-}
+    output_dict = json.loads(output)
+    best_match = output_dict["best match"]
+    best_match_id = food_candidates_id_dict[best_match]
+
+    output_2 = {
+        "query" : query,
+        "best_foodON_match" : best_match,
+        "best_foodON_match_id" : best_match_id
+    }
+else:
+    output_2 = {
+        "query" : query,
+        "best_foodON_match" : ''
+        "best_foodON_match_id" : ''
+    }
 
 print(json.dumps(output_2, indent=4))

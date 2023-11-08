@@ -86,4 +86,4 @@ output_2 = {
     "best_foodON_match_id" : best_match_id
 }
 
-print(output_2)
+print(json.dumps(output_2, indent=4))

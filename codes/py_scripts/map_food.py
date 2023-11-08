@@ -95,7 +95,7 @@ if len(food_candidates_names) != 0:
 else:
     output_2 = {
         "query" : query,
-        "best_foodON_match" : ''
+        "best_foodON_match" : '',
         "best_foodON_match_id" : ''
     }
 

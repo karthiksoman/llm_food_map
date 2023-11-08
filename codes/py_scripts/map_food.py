@@ -57,10 +57,10 @@ def get_GPT_response(instruction, system_prompt, chat_model_id, chat_deployment_
 vectorstore = load_chroma(VECTOR_DB_PATH, SENTENCE_EMBEDDING_MODEL_FOR_NODE_RETRIEVAL)
 node_search_result = vectorstore.similarity_search_with_score(query, k=25)
 food_candidates_names = []
-food_candidates_ids = []
+food_candidates_id_dict = {}
 for item in node_search_result:
     food_candidates_names.append(item[0].page_content)
-    food_candidates_ids.append(item[0].metadata["foodON_ID"])
+    food_candidates_id_dict[item[0].page_content] = item[0].metadata["foodON_ID"]
 
 food_candidates_names_str = ", ".join(food_candidates_names)
 
@@ -77,4 +77,13 @@ output = get_GPT_response(enriched_prompt, SYSTEM_PROMPT, CHAT_MODEL_ID, CHAT_DE
 
 import json
 output_dict = json.loads(output)
-print(output_dict["best match"])
+best_match = output_dict["best match"]
+best_match_id = food_candidates_id_dict[best_match]
+
+output_2 = {
+    "query" : query,
+    "best_foodON_match" : best_match,
+    "best_foodON_match_id" : best_match_id
+}
+
+print(output_2)

@@ -1,6 +1,7 @@
 import sys
 import openai
 from dotenv import load_dotenv, find_dotenv
+import os
 
 
 query = sys.argv[1]

@@ -33,19 +33,21 @@ def main():
     recognize_food_list = recognize_food(query)    
     if not recognize_food_list:
         output_2 = no_match_resp(query)
-    recognize_food_list = [item for item in recognize_food_list if item != query]
-    vectorstore = load_chroma(VECTOR_DB_PATH, SENTENCE_EMBEDDING_MODEL_FOR_NODE_RETRIEVAL)
-    direct_match = find_food_match(query, vectorstore)
-    try:
-        if direct_match["confidence_score"] > DIRECT_MATCH_THRESH:
-            final_output = direct_match
-        else:
-            final_output = []
-            for item in recognize_food_list:
-                final_output.append(find_food_match(item, vectorstore))                            
-    except:
-        final_output = no_match_resp(query)                
-    print(json.dumps(final_output, indent=4))
+        print(json.dumps(output_2, indent=4))
+    else:
+        recognize_food_list = [item for item in recognize_food_list if item != query]
+        vectorstore = load_chroma(VECTOR_DB_PATH, SENTENCE_EMBEDDING_MODEL_FOR_NODE_RETRIEVAL)
+        direct_match = find_food_match(query, vectorstore)
+        try:
+            if direct_match["confidence_score"] > DIRECT_MATCH_THRESH:
+                final_output = direct_match
+            else:
+                final_output = []
+                for item in recognize_food_list:
+                    final_output.append(find_food_match(item, vectorstore))                            
+        except:
+            final_output = no_match_resp(query)                
+        print(json.dumps(final_output, indent=4))
 
 
 def recognize_food(input_query):
